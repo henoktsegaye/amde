@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { getSection } from '../data/content'
+import { getSection, getSubject } from '../data/content'
 import { useBreakpoint } from '../hooks/useBreakpoint'
 import { useProgress } from '../context/ProgressContext'
 import type { Question, MCQuestion, TFQuestion, Quiz } from '../data/content'
@@ -8,22 +8,24 @@ import type { Question, MCQuestion, TFQuestion, Quiz } from '../data/content'
 const accent = '#6A5AE0'
 
 export function QuizPage() {
-  const { nodeId = '', sectionId = '' } = useParams()
-  const section = getSection(nodeId, sectionId)
+  const { subjectId = 'ai-engineering', nodeId = '', sectionId = '' } = useParams()
+  const subject = getSubject(subjectId)
+  const section = getSection(subjectId, nodeId, sectionId)
   const bp = useBreakpoint()
+  const subjectAccent = subject?.accent ?? accent
 
   if (!section) {
     return (
       <div style={{ padding: 40, fontFamily: 'Figtree, system-ui, sans-serif' }}>
         <p>Quiz not found.</p>
-        <Link to="/ai-engineering" style={{ color: accent }}>← Back</Link>
+        <Link to={`/${subjectId}`} style={{ color: subjectAccent }}>← Back</Link>
       </div>
     )
   }
 
   return bp === 'desktop'
-    ? <DesktopQuiz quiz={section.quiz} sectionTitle={section.title} nodeId={nodeId} sectionId={sectionId} />
-    : <MobileQuiz quiz={section.quiz} sectionTitle={section.title} nodeId={nodeId} sectionId={sectionId} />
+    ? <DesktopQuiz quiz={section.quiz} sectionTitle={section.title} nodeId={nodeId} sectionId={sectionId} subjectId={subjectId} subjectTitle={subject?.title ?? subjectId} subjectAccent={subjectAccent} />
+    : <MobileQuiz quiz={section.quiz} sectionTitle={section.title} nodeId={nodeId} sectionId={sectionId} subjectId={subjectId} subjectAccent={subjectAccent} />
 }
 
 // ─── Shared quiz logic via hook ───────────────────────────────────────────────
@@ -59,18 +61,18 @@ function useQuizState(questions: Question[]) {
 
 // ─── Desktop ──────────────────────────────────────────────────────────────────
 
-function DesktopQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; sectionTitle: string; nodeId: string; sectionId: string }) {
+function DesktopQuiz({ quiz, sectionTitle, nodeId, sectionId, subjectId, subjectTitle, subjectAccent }: { quiz: Quiz; sectionTitle: string; nodeId: string; sectionId: string; subjectId: string; subjectTitle: string; subjectAccent: string }) {
   const state = useQuizState(quiz.questions)
   const { q, options, correctIdx, isCorrect, checked, selected, setSelected, check, next, done, score, current, total } = state
 
-  if (done) return <DesktopResult score={score} total={total} nodeId={nodeId} sectionId={sectionId} />
+  if (done) return <DesktopResult score={score} total={total} nodeId={nodeId} sectionId={sectionId} subjectId={subjectId} />
 
   const pct = Math.round((current / total) * 100)
 
   return (
     <div style={{ maxWidth: 720, padding: '40px 48px', width: '100%', boxSizing: 'border-box' }}>
       <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28, fontSize: 13, color: '#6B6B76' }}>
-        <Link to="/ai-engineering" style={{ color: '#6B6B76' }}>AI Engineering</Link>
+        <Link to={`/${subjectId}`} style={{ color: '#6B6B76' }}>{subjectTitle}</Link>
         <span>›</span>
         <span>{sectionTitle}</span>
         <span>›</span>
@@ -80,12 +82,12 @@ function DesktopQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; se
       {/* Progress */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
         <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#ECECF0', overflow: 'hidden' }}>
-          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: accent, transition: 'width 0.3s' }} />
+          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 999, background: subjectAccent, transition: 'width 0.3s' }} />
         </div>
         <span style={{ fontSize: 14, fontWeight: 600, color: '#6B6B76', flexShrink: 0 }}>{current + 1} / {total}</span>
       </div>
 
-      <div style={{ marginBottom: 12, fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: accent }}>{sectionTitle} · Section quiz</div>
+      <div style={{ marginBottom: 12, fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: subjectAccent }}>{sectionTitle} · Section quiz</div>
       <h1 style={{ margin: '0 0 28px', fontSize: 24, fontWeight: 500, letterSpacing: '-0.01em', color: '#18181B', lineHeight: 1.3 }}>{q.prompt}</h1>
 
       <div role="radiogroup" aria-label="Answer options" style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
@@ -94,7 +96,7 @@ function DesktopQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; se
           const showCorrect = checked && i === correctIdx
           const showWrong = checked && sel && !isCorrect
           let bg = '#F5F5F7', border = '#ECECF0', badgeBg = '#fff', badgeFg = '#6B6B76'
-          if (sel && !checked) { bg = `${accent}12`; border = accent; badgeBg = accent; badgeFg = '#fff' }
+          if (sel && !checked) { bg = `${subjectAccent}12`; border = subjectAccent; badgeBg = subjectAccent; badgeFg = '#fff' }
           if (showCorrect) { bg = '#E7F4EC'; border = '#15803D'; badgeBg = '#15803D'; badgeFg = '#fff' }
           if (showWrong) { bg = '#FEF2F2'; border = '#EF4444'; badgeBg = '#EF4444'; badgeFg = '#fff' }
           return (
@@ -112,7 +114,7 @@ function DesktopQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; se
       </div>
 
       {!checked ? (
-        <button disabled={selected === null} onClick={check} style={{ width: '100%', height: 50, borderRadius: 14, background: selected !== null ? accent : '#ECECF0', color: selected !== null ? '#fff' : '#6B6B76', fontSize: 16, fontWeight: 600, cursor: selected !== null ? 'pointer' : 'default', transition: 'all 0.15s' }}>
+        <button disabled={selected === null} onClick={check} style={{ width: '100%', height: 50, borderRadius: 14, background: selected !== null ? subjectAccent : '#ECECF0', color: selected !== null ? '#fff' : '#6B6B76', fontSize: 16, fontWeight: 600, cursor: selected !== null ? 'pointer' : 'default', transition: 'all 0.15s' }}>
           Check answer
         </button>
       ) : (
@@ -128,7 +130,7 @@ function DesktopQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; se
   )
 }
 
-function DesktopResult({ score, total, nodeId, sectionId }: { score: number; total: number; nodeId: string; sectionId: string }) {
+function DesktopResult({ score, total, nodeId, sectionId, subjectId }: { score: number; total: number; nodeId: string; sectionId: string; subjectId: string }) {
   const pct = Math.round((score / total) * 100)
   const rank = pct >= 90 ? 'Mastered ⭐⭐⭐' : pct >= 70 ? 'Solid ⭐⭐' : pct >= 50 ? 'Shaky ⭐' : 'Retry'
   const passed = pct >= 70
@@ -145,8 +147,8 @@ function DesktopResult({ score, total, nodeId, sectionId }: { score: number; tot
       <h1 style={{ margin: '0 0 24px', fontSize: 32, fontWeight: 500, letterSpacing: '-0.02em' }}>{pct}% · {rank}</h1>
       <p style={{ margin: '0 0 32px', fontSize: 15, color: '#6B6B76' }}>{score} of {total} correct</p>
       <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-        <Link to="/ai-engineering" style={{ height: 48, padding: '0 24px', borderRadius: 999, background: '#18181B', color: '#fff', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center' }}>Back to roadmap</Link>
-        <Link to={`/ai-engineering/${nodeId}/${sectionId}/quiz`} onClick={() => window.location.reload()} style={{ height: 48, padding: '0 24px', borderRadius: 999, background: '#F5F5F7', color: '#18181B', fontSize: 15, fontWeight: 500, display: 'flex', alignItems: 'center' }}>Retry</Link>
+        <Link to={`/${subjectId}`} style={{ height: 48, padding: '0 24px', borderRadius: 999, background: '#18181B', color: '#fff', fontSize: 15, fontWeight: 600, display: 'flex', alignItems: 'center' }}>Back to roadmap</Link>
+        <Link to={`/${subjectId}/${nodeId}/${sectionId}/quiz`} onClick={() => window.location.reload()} style={{ height: 48, padding: '0 24px', borderRadius: 999, background: '#F5F5F7', color: '#18181B', fontSize: 15, fontWeight: 500, display: 'flex', alignItems: 'center' }}>Retry</Link>
       </div>
     </div>
   )
@@ -154,27 +156,27 @@ function DesktopResult({ score, total, nodeId, sectionId }: { score: number; tot
 
 // ─── Mobile ───────────────────────────────────────────────────────────────────
 
-function MobileQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; sectionTitle: string; nodeId: string; sectionId: string }) {
+function MobileQuiz({ quiz, sectionTitle, nodeId, sectionId, subjectId, subjectAccent }: { quiz: Quiz; sectionTitle: string; nodeId: string; sectionId: string; subjectId: string; subjectAccent: string }) {
   const state = useQuizState(quiz.questions)
   const { q, options, correctIdx, isCorrect, checked, selected, setSelected, check, next, done, score, current, total } = state
 
-  if (done) return <MobileResult score={score} total={total} nodeId={nodeId} sectionId={sectionId} />
+  if (done) return <MobileResult score={score} total={total} nodeId={nodeId} sectionId={sectionId} subjectId={subjectId} />
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 8px', flexShrink: 0 }}>
-        <Link to="/ai-engineering" aria-label="Leave quiz"
+        <Link to={`/${subjectId}`} aria-label="Leave quiz"
           style={{ width: 44, height: 52, borderRadius: 999, background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
         </Link>
         <div style={{ flex: 1, height: 8, borderRadius: 999, background: '#ECECF0', overflow: 'hidden' }}>
-          <div style={{ width: `${Math.round((current / total) * 100)}%`, height: '100%', borderRadius: 999, background: accent, transition: 'width 0.3s' }} />
+          <div style={{ width: `${Math.round((current / total) * 100)}%`, height: '100%', borderRadius: 999, background: subjectAccent, transition: 'width 0.3s' }} />
         </div>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#6B6B76' }}>{current + 1}/{total}</span>
       </header>
 
       <main style={{ flex: 1, padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 20, overflow: 'auto' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: accent }}>{sectionTitle} · Section quiz</div>
+        <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: subjectAccent }}>{sectionTitle} · Section quiz</div>
         <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.25, fontWeight: 500, letterSpacing: '-0.01em' }}>{q.prompt}</h1>
         <div role="radiogroup" aria-label="Answer options" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {options.map((opt, i) => {
@@ -182,7 +184,7 @@ function MobileQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; sec
             const showCorrect = checked && i === correctIdx
             const showWrong = checked && sel && !isCorrect
             let bg = '#F5F5F7', border = '#ECECF0', badgeBg = '#fff', badgeFg = '#6B6B76'
-            if (sel && !checked) { bg = `${accent}12`; border = accent; badgeBg = accent; badgeFg = '#fff' }
+            if (sel && !checked) { bg = `${subjectAccent}12`; border = subjectAccent; badgeBg = subjectAccent; badgeFg = '#fff' }
             if (showCorrect) { bg = '#E7F4EC'; border = '#15803D'; badgeBg = '#15803D'; badgeFg = '#fff' }
             if (showWrong) { bg = '#FEF2F2'; border = '#EF4444'; badgeBg = '#EF4444'; badgeFg = '#fff' }
             return (
@@ -203,7 +205,7 @@ function MobileQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; sec
       {!checked ? (
         <footer style={{ padding: '14px 20px 24px', flexShrink: 0 }}>
           <button disabled={selected === null} onClick={check}
-            style={{ width: '100%', height: 52, borderRadius: 999, background: selected !== null ? accent : '#ECECF0', color: selected !== null ? '#fff' : '#6B6B76', fontSize: 17, fontWeight: 600, cursor: selected !== null ? 'pointer' : 'default', transition: 'all 0.15s' }}>
+            style={{ width: '100%', height: 52, borderRadius: 999, background: selected !== null ? subjectAccent : '#ECECF0', color: selected !== null ? '#fff' : '#6B6B76', fontSize: 17, fontWeight: 600, cursor: selected !== null ? 'pointer' : 'default', transition: 'all 0.15s' }}>
             Check answer
           </button>
         </footer>
@@ -220,7 +222,7 @@ function MobileQuiz({ quiz, sectionTitle, nodeId, sectionId }: { quiz: Quiz; sec
   )
 }
 
-function MobileResult({ score, total, nodeId, sectionId }: { score: number; total: number; nodeId: string; sectionId: string }) {
+function MobileResult({ score, total, nodeId, sectionId, subjectId }: { score: number; total: number; nodeId: string; sectionId: string; subjectId: string }) {
   const pct = Math.round((score / total) * 100)
   const rank = pct >= 90 ? 'Mastered' : pct >= 70 ? 'Solid' : pct >= 50 ? 'Shaky' : 'Retry'
   const passed = pct >= 70
@@ -265,8 +267,8 @@ function MobileResult({ score, total, nodeId, sectionId }: { score: number; tota
       </main>
 
       <footer style={{ padding: '16px 20px 24px', display: 'flex', flexDirection: 'column', gap: 10, flexShrink: 0 }}>
-        <Link to="/ai-engineering" style={{ height: 52, borderRadius: 999, background: '#18181B', color: '#fff', fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Back to roadmap</Link>
-        <Link to={`/ai-engineering/${nodeId}/${sectionId}/quiz`} onClick={() => window.location.reload()} style={{ height: 52, borderRadius: 999, background: '#F5F5F7', fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Retry for three stars</Link>
+        <Link to={`/${subjectId}`} style={{ height: 52, borderRadius: 999, background: '#18181B', color: '#fff', fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Back to roadmap</Link>
+        <Link to={`/${subjectId}/${nodeId}/${sectionId}/quiz`} onClick={() => window.location.reload()} style={{ height: 52, borderRadius: 999, background: '#F5F5F7', fontSize: 16, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Retry for three stars</Link>
       </footer>
     </div>
   )

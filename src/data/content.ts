@@ -3100,8 +3100,18 @@ body { background: var(--color-bg); color: var(--color-text); }` },
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-export function getLesson(nodeId: string, sectionId: string, lessonId: string): Lesson | undefined {
-  for (const node of aiEngineering.nodes) {
+const subjectsById: Record<string, Subject> = {
+  [aiEngineering.id]: aiEngineering,
+  [webDevelopment.id]: webDevelopment,
+}
+
+export function getSubject(id: string): Subject | undefined {
+  return subjectsById[id]
+}
+
+export function getLesson(subjectId: string, nodeId: string, sectionId: string, lessonId: string): Lesson | undefined {
+  const nodes = (subjectsById[subjectId] ?? aiEngineering).nodes
+  for (const node of nodes) {
     if (node.id !== nodeId) continue
     for (const section of node.sections) {
       if (section.id !== sectionId) continue
@@ -3110,25 +3120,17 @@ export function getLesson(nodeId: string, sectionId: string, lessonId: string): 
   }
 }
 
-export function getSection(nodeId: string, sectionId: string) {
-  const node = aiEngineering.nodes.find((n) => n.id === nodeId)
+export function getSection(subjectId: string, nodeId: string, sectionId: string) {
+  const nodes = (subjectsById[subjectId] ?? aiEngineering).nodes
+  const node = nodes.find((n) => n.id === nodeId)
   return node?.sections.find((s) => s.id === sectionId)
 }
 
-export function getNode(nodeId: string) {
-  return aiEngineering.nodes.find((n) => n.id === nodeId)
+export function getNode(subjectId: string, nodeId: string) {
+  const nodes = (subjectsById[subjectId] ?? aiEngineering).nodes
+  return nodes.find((n) => n.id === nodeId)
 }
 
-// A node unlocks when every section of every prerequisite node is complete.
-export function nodeIsUnlocked(nodeId: string, completedSections: string[]): boolean {
-  const node = getNode(nodeId)
-  if (!node) return false
-  return node.prereqs.every((prereqNodeId) => {
-    const prereqNode = getNode(prereqNodeId)
-    if (!prereqNode) return false
-    return prereqNode.sections.every((s) => completedSections.includes(s.id))
-  })
-}
 
 export function subjectProgress(completedSections: string[]): number {
   const total = aiEngineering.nodes.reduce((n, nd) => n + nd.sections.length, 0)

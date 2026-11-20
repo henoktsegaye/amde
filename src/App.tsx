@@ -13,8 +13,8 @@ function App() {
       <Route element={<AppShell />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/:subjectId" element={<SubjectPage />} />
-        <Route path="/ai-engineering/:nodeId/:sectionId/:lessonId" element={<LessonPage />} />
-        <Route path="/ai-engineering/:nodeId/:sectionId/quiz" element={<QuizPage />} />
+        <Route path="/:subjectId/:nodeId/:sectionId/:lessonId" element={<LessonPage />} />
+        <Route path="/:subjectId/:nodeId/:sectionId/quiz" element={<QuizPage />} />
         <Route path="/paths" element={<PathsPage />} />
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="/review" element={<div style={{ padding: 40, fontFamily: 'Figtree, system-ui, sans-serif' }}><h1>Review</h1><p style={{ color: '#6B6B76' }}>Spaced repetition coming in Phase 2.</p></div>} />
