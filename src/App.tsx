@@ -12,7 +12,7 @@ function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/ai-engineering" element={<SubjectPage />} />
+        <Route path="/:subjectId" element={<SubjectPage />} />
         <Route path="/ai-engineering/:nodeId/:sectionId/:lessonId" element={<LessonPage />} />
         <Route path="/ai-engineering/:nodeId/:sectionId/quiz" element={<QuizPage />} />
         <Route path="/paths" element={<PathsPage />} />

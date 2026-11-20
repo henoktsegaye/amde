@@ -1,18 +1,25 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { aiEngineering, nodeIsUnlocked } from '../data/content'
+import { Link, useParams } from 'react-router-dom'
+import { aiEngineering, webDevelopment, Subject, Node } from '../data/content'
 import { useProgress } from '../context/ProgressContext'
 import { useBreakpoint } from '../hooks/useBreakpoint'
 import { ProgressRing } from '../components/ProgressRing'
 
-const accent = '#6A5AE0'
+const subjectsById: Record<string, Subject> = {
+  [aiEngineering.id]: aiEngineering,
+  [webDevelopment.id]: webDevelopment,
+}
 
 type NodeState = 'locked' | 'available' | 'in-progress' | 'complete'
 
-function getNodeState(nodeId: string, completedSections: string[], readLessons: string[]): NodeState {
-  const node = aiEngineering.nodes.find((n) => n.id === nodeId)
+function getNodeState(nodeId: string, completedSections: string[], readLessons: string[], nodes: Node[]): NodeState {
+  const node = nodes.find((n) => n.id === nodeId)
   if (!node) return 'locked'
-  if (!nodeIsUnlocked(nodeId, completedSections)) return 'locked'
+  const isUnlocked = node.prereqs.every((prereqId) => {
+    const prereq = nodes.find((n) => n.id === prereqId)
+    return prereq?.sections.every((s) => completedSections.includes(s.id)) ?? false
+  })
+  if (!isUnlocked) return 'locked'
   const allSectionsDone = node.sections.every((s) => completedSections.includes(s.id))
   if (allSectionsDone) return 'complete'
   const anyStarted = node.sections.some((s) => s.lessons.some((l) => readLessons.includes(l.id)))
@@ -20,38 +27,46 @@ function getNodeState(nodeId: string, completedSections: string[], readLessons: 
   return 'available'
 }
 
-const stateStyle: Record<NodeState, React.CSSProperties> = {
-  locked:      { background: '#F5F5F7', border: '2px dashed #D4D4D8', opacity: 0.65, cursor: 'default' },
-  available:   { background: '#fff',    border: '1.5px solid #ECECF0', cursor: 'pointer' },
-  'in-progress': { background: `${accent}0D`, border: `2px solid ${accent}`, cursor: 'pointer' },
-  complete:    { background: '#E7F4EC', border: '1.5px solid #CDE9D7', cursor: 'pointer' },
+function makeStateStyle(accent: string): Record<NodeState, React.CSSProperties> {
+  return {
+    locked:        { background: '#F5F5F7', border: '2px dashed #D4D4D8', opacity: 0.65, cursor: 'default' },
+    available:     { background: '#fff',    border: '1.5px solid #ECECF0', cursor: 'pointer' },
+    'in-progress': { background: `${accent}0D`, border: `2px solid ${accent}`, cursor: 'pointer' },
+    complete:      { background: '#E7F4EC', border: '1.5px solid #CDE9D7', cursor: 'pointer' },
+  }
 }
 
-const stateLabel: Record<NodeState, { text: string; color: string; bg: string }> = {
-  locked:        { text: 'Locked',      color: '#6B6B76', bg: '#ECECF0' },
-  available:     { text: 'Available',   color: '#6B6B76', bg: '#F5F5F7' },
-  'in-progress': { text: 'In progress', color: accent,    bg: `${accent}18` },
-  complete:      { text: 'Complete',    color: '#15803D', bg: '#E7F4EC' },
+function makeStateLabel(accent: string): Record<NodeState, { text: string; color: string; bg: string }> {
+  return {
+    locked:        { text: 'Locked',      color: '#6B6B76', bg: '#ECECF0' },
+    available:     { text: 'Available',   color: '#6B6B76', bg: '#F5F5F7' },
+    'in-progress': { text: 'In progress', color: accent,    bg: `${accent}18` },
+    complete:      { text: 'Complete',    color: '#15803D', bg: '#E7F4EC' },
+  }
 }
 
 // ─── Shared ───────────────────────────────────────────────────────────────────
-
 export function SubjectPage() {
   const bp = useBreakpoint()
   const { completedSections, readLessons } = useProgress()
-  const total = aiEngineering.nodes.reduce((s, n) => s + n.sections.length, 0)
+  const { subjectId } = useParams()
+  const subject = subjectsById[subjectId ?? ''] ?? aiEngineering
+  const total = subject.nodes.reduce((s, n) => s + n.sections.length, 0)
   const pct = total > 0 ? Math.round((completedSections.length / total) * 100) : 0
 
   return bp === 'desktop'
-    ? <DesktopRoadmap completedSections={completedSections} readLessons={readLessons} pct={pct} />
-    : <MobileRoadmap  completedSections={completedSections} readLessons={readLessons} pct={pct} />
+    ? <DesktopRoadmap completedSections={completedSections} readLessons={readLessons} pct={pct} subject={subject} />
+    : <MobileRoadmap  completedSections={completedSections} readLessons={readLessons} pct={pct} subject={subject} />
 }
 
 // ─── Desktop — DAG flowchart + side panel ─────────────────────────────────────
 
-function DesktopRoadmap({ completedSections, readLessons, pct }: { completedSections: string[]; readLessons: string[]; pct: number }) {
-  const [selected, setSelected] = useState<string | null>(aiEngineering.nodes[0]?.id ?? null)
-  const selectedNode = aiEngineering.nodes.find((n) => n.id === selected)
+function DesktopRoadmap({ completedSections, readLessons, pct, subject }: { completedSections: string[]; readLessons: string[]; pct: number; subject: Subject }) {
+  const { accent } = subject
+  const stateStyle = makeStateStyle(accent)
+  const stateLabel = makeStateLabel(accent)
+  const [selected, setSelected] = useState<string | null>(subject.nodes[0]?.id ?? null)
+  const selectedNode = subject.nodes.find((n) => n.id === selected)
 
   // Build column layout from prereq graph
   // Column 0: nodes with no prereqs
@@ -61,17 +76,17 @@ function DesktopRoadmap({ completedSections, readLessons, pct }: { completedSect
     if (colOf[id] !== undefined) return colOf[id]
     if (visited.has(id)) return 0
     visited.add(id)
-    const node = aiEngineering.nodes.find((n) => n.id === id)
+    const node = subject.nodes.find((n) => n.id === id)
     if (!node || node.prereqs.length === 0) { colOf[id] = 0; return 0 }
     const col = Math.max(...node.prereqs.map((p) => assignCol(p, visited) + 1))
     colOf[id] = col
     return col
   }
-  aiEngineering.nodes.forEach((n) => assignCol(n.id))
+  subject.nodes.forEach((n) => assignCol(n.id))
   const maxCol = Math.max(...Object.values(colOf), 0)
 
   const cols: string[][] = Array.from({ length: maxCol + 1 }, () => [])
-  aiEngineering.nodes.forEach((n) => cols[colOf[n.id] ?? 0].push(n.id))
+  subject.nodes.forEach((n) => cols[colOf[n.id] ?? 0].push(n.id))
 
   return (
     <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -81,8 +96,8 @@ function DesktopRoadmap({ completedSections, readLessons, pct }: { completedSect
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
             <ProgressRing pct={pct} size={48} stroke={5} accent={accent} label={`${pct}%`} />
             <div>
-              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#18181B', letterSpacing: '-0.02em' }}>{aiEngineering.title}</h1>
-              <p style={{ margin: 0, fontSize: 14, color: '#6B6B76' }}>{aiEngineering.description}</p>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: '#18181B', letterSpacing: '-0.02em' }}>{subject.title}</h1>
+              <p style={{ margin: 0, fontSize: 14, color: '#6B6B76' }}>{subject.description}</p>
             </div>
           </div>
         </div>
@@ -92,8 +107,8 @@ function DesktopRoadmap({ completedSections, readLessons, pct }: { completedSect
           {cols.map((colNodeIds, colIdx) => (
             <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 180 }}>
               {colNodeIds.map((nodeId) => {
-                const node = aiEngineering.nodes.find((n) => n.id === nodeId)!
-                const state = getNodeState(nodeId, completedSections, readLessons)
+                const node = subject.nodes.find((n) => n.id === nodeId)!
+                const state = getNodeState(nodeId, completedSections, readLessons, subject.nodes)
                 const isSelected = selected === nodeId
                 const doneSections = node.sections.filter((s) => completedSections.includes(s.id)).length
 
@@ -125,7 +140,7 @@ function DesktopRoadmap({ completedSections, readLessons, pct }: { completedSect
                         <span style={{ fontSize: 14, fontWeight: 600, color: state === 'locked' ? '#6B6B76' : '#18181B', lineHeight: 1.3 }}>
                           {node.title}
                         </span>
-                        <StateIcon state={state} />
+                        <StateIcon state={state} accent={accent} />
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: 12, color: '#6B6B76' }}>
@@ -164,7 +179,7 @@ function DesktopRoadmap({ completedSections, readLessons, pct }: { completedSect
       {/* Right: detail panel */}
       <div style={{ width: 320, borderLeft: '1px solid #ECECF0', overflowY: 'auto', padding: '40px 32px 40px 28px', background: '#faf9f5', flexShrink: 0 }}>
         {selectedNode ? (
-          <NodeDetail node={selectedNode} completedSections={completedSections} readLessons={readLessons} />
+          <NodeDetail node={selectedNode} completedSections={completedSections} readLessons={readLessons} subject={subject} />
         ) : (
           <div style={{ color: '#6B6B76', fontSize: 14, marginTop: 40, textAlign: 'center' }}>
             Select a topic to see its sections
@@ -175,13 +190,15 @@ function DesktopRoadmap({ completedSections, readLessons, pct }: { completedSect
   )
 }
 
-function NodeDetail({ node, completedSections, readLessons }: { node: typeof aiEngineering.nodes[0]; completedSections: string[]; readLessons: string[] }) {
-  const state = getNodeState(node.id, completedSections, readLessons)
+function NodeDetail({ node, completedSections, readLessons, subject }: { node: Node; completedSections: string[]; readLessons: string[]; subject: Subject }) {
+  const { accent } = subject
+  const stateStyle = makeStateStyle(accent)
+  const state = getNodeState(node.id, completedSections, readLessons, subject.nodes)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <StateIcon state={state} />
+          <StateIcon state={state} accent={accent} />
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#18181B' }}>{node.title}</h2>
         </div>
         <p style={{ margin: 0, fontSize: 13, color: '#6B6B76', lineHeight: 1.5 }}>
@@ -191,7 +208,7 @@ function NodeDetail({ node, completedSections, readLessons }: { node: typeof aiE
 
       {node.prereqs.length > 0 && state === 'locked' && (
         <div style={{ padding: '10px 14px', borderRadius: 10, background: '#FFF7ED', border: '1px solid #FED7AA', fontSize: 13, color: '#92400E' }}>
-          Complete <strong>{node.prereqs.map((p) => aiEngineering.nodes.find((n) => n.id === p)?.title ?? p).join(' & ')}</strong> first
+          Complete <strong>{node.prereqs.map((p) => subject.nodes.find((n) => n.id === p)?.title ?? p).join(' & ')}</strong> first
         </div>
       )}
 
@@ -204,7 +221,7 @@ function NodeDetail({ node, completedSections, readLessons }: { node: typeof aiE
           return (
             <Link
               key={section.id}
-              to={state !== 'locked' ? `/ai-engineering/${node.id}/${section.id}/${firstLesson.id}` : '#'}
+              to={state !== 'locked' ? `/${subject.id}/${node.id}/${section.id}/${firstLesson.id}` : '#'}
               style={{
                 display: 'flex', flexDirection: 'column', gap: 8,
                 padding: '14px 16px', borderRadius: 14,
@@ -235,7 +252,8 @@ function NodeDetail({ node, completedSections, readLessons }: { node: typeof aiE
 
 // ─── Mobile — subway-map accordion ────────────────────────────────────────────
 
-function MobileRoadmap({ completedSections, readLessons, pct }: { completedSections: string[]; readLessons: string[]; pct: number }) {
+function MobileRoadmap({ completedSections, readLessons, pct, subject }: { completedSections: string[]; readLessons: string[]; pct: number; subject: Subject }) {
+  const { accent } = subject
   const [openId, setOpenId] = useState<string | null>(null)
 
   return (
@@ -245,17 +263,17 @@ function MobileRoadmap({ completedSections, readLessons, pct }: { completedSecti
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
         </Link>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', color: '#18181B' }}>{aiEngineering.title}</div>
-          <div style={{ fontSize: 13, color: '#6B6B76' }}>{aiEngineering.nodes.length} topics</div>
+          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', color: '#18181B' }}>{subject.title}</div>
+          <div style={{ fontSize: 13, color: '#6B6B76' }}>{subject.nodes.length} topics</div>
         </div>
         <ProgressRing pct={pct} size={44} stroke={4} accent={accent} label={`${pct}%`} />
       </header>
 
       <main style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 32px' }}>
-        {aiEngineering.nodes.map((node, idx) => {
-          const state = getNodeState(node.id, completedSections, readLessons)
+        {subject.nodes.map((node, idx) => {
+          const state = getNodeState(node.id, completedSections, readLessons, subject.nodes)
           const isOpen = openId === node.id
-          const isLast = idx === aiEngineering.nodes.length - 1
+          const isLast = idx === subject.nodes.length - 1
           const doneSections = node.sections.filter((s) => completedSections.includes(s.id)).length
 
           return (
@@ -295,7 +313,7 @@ function MobileRoadmap({ completedSections, readLessons, pct }: { completedSecti
                     <div style={{ fontSize: 15, fontWeight: 600, color: state === 'locked' ? '#6B6B76' : '#18181B' }}>{node.title}</div>
                     <div style={{ fontSize: 12, color: '#6B6B76', marginTop: 2 }}>
                       {state === 'locked'
-                        ? `Finish ${node.prereqs.map((p) => aiEngineering.nodes.find((n) => n.id === p)?.title ?? p).join(' & ')} first`
+                        ? `Finish ${node.prereqs.map((p) => subject.nodes.find((n) => n.id === p)?.title ?? p).join(' & ')} first`
                         : `${doneSections}/${node.sections.length} sections`}
                     </div>
                   </div>
@@ -315,7 +333,7 @@ function MobileRoadmap({ completedSections, readLessons, pct }: { completedSecti
                       return (
                         <Link
                           key={section.id}
-                          to={`/ai-engineering/${node.id}/${section.id}/${section.lessons[0].id}`}
+                          to={`/${subject.id}/${node.id}/${section.id}/${section.lessons[0].id}`}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 10,
                             padding: '12px 14px', borderRadius: 12,
@@ -349,7 +367,7 @@ function MobileRoadmap({ completedSections, readLessons, pct }: { completedSecti
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
-function StateIcon({ state }: { state: NodeState }) {
+function StateIcon({ state, accent }: { state: NodeState; accent: string }) {
   if (state === 'complete') return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-label="Complete" role="img"><path d="m5 12 5 5 9-10" /></svg>
   )
