@@ -6,14 +6,15 @@ export function MobileShell() {
     <div style={{
       width: '100%',
       maxWidth: 480,
-      minHeight: '100dvh',
+      height: '100dvh',
       margin: '0 auto',
       background: '#FFFFFF',
       display: 'flex',
       flexDirection: 'column',
+      overflow: 'hidden',
       position: 'relative',
     }}>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Outlet />
       </div>
       <BottomNav />
