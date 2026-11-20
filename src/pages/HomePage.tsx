@@ -186,9 +186,9 @@ function StudyChart() {
 
 function MobileHome({ pct, next, streak, xp }: { pct: number; next: NextLesson | null; streak: number; xp: number }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {/* Header */}
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 20px 8px' }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 20px 8px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44, padding: '0 14px 0 6px', borderRadius: 999, background: '#F5F5F7' }}>
           <AmdeLogoIcon size={32} />
           <span style={{ fontSize: 16, fontWeight: 600 }}>Amde</span>
@@ -207,7 +207,7 @@ function MobileHome({ pct, next, streak, xp }: { pct: number; next: NextLesson |
         </div>
       </header>
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 20, padding: '12px 20px 16px', overflow: 'auto' }}>
+      <main style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 20, padding: '12px 20px 16px', overflowY: 'auto' }}>
         <div>
           <h1 style={{ margin: '0 0 4px', fontSize: 32, fontWeight: 500, letterSpacing: '-0.02em' }}>Hello Henok</h1>
           <p style={{ margin: 0, fontSize: 15, color: '#6B6B76' }}>One screen at a time.</p>

@@ -57,7 +57,7 @@ export function PathsPage() {
         </div>
       </div>
 
-      <main style={{ flex: 1, padding: bp === 'desktop' ? '0 0 40px' : '0 20px 16px', display: bp === 'desktop' ? 'grid' : 'flex', gridTemplateColumns: bp === 'desktop' ? 'repeat(auto-fill, minmax(340px, 1fr))' : undefined, flexDirection: bp === 'desktop' ? undefined : 'column', gap: 12, overflowY: 'auto', alignContent: 'start' }}>
+      <main style={{ flex: 1, minHeight: 0, padding: bp === 'desktop' ? '0 0 40px' : '0 20px 16px', display: bp === 'desktop' ? 'grid' : 'flex', gridTemplateColumns: bp === 'desktop' ? 'repeat(auto-fill, minmax(340px, 1fr))' : undefined, flexDirection: bp === 'desktop' ? undefined : 'column', gap: 12, overflowY: 'auto', alignContent: 'start' }}>
         {shown.map((p) => {
           const pathPct = p.id === 'ai-engineering' ? pct : 0
           return (
@@ -100,5 +100,5 @@ export function PathsPage() {
     </div>
   )
 
-  return <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>{content}</div>
+  return <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>{content}</div>
 }

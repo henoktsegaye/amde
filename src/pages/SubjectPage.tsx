@@ -257,7 +257,7 @@ function MobileRoadmap({ completedSections, readLessons, pct, subject }: { compl
   const [openId, setOpenId] = useState<string | null>(null)
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 8px', flexShrink: 0 }}>
         <Link to="/" aria-label="Back" style={{ width: 44, height: 44, borderRadius: 999, background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
@@ -269,7 +269,7 @@ function MobileRoadmap({ completedSections, readLessons, pct, subject }: { compl
         <ProgressRing pct={pct} size={44} stroke={4} accent={accent} label={`${pct}%`} />
       </header>
 
-      <main style={{ flex: 1, overflowY: 'auto', padding: '8px 20px 32px' }}>
+      <main style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '8px 20px 32px' }}>
         {subject.nodes.map((node, idx) => {
           const state = getNodeState(node.id, completedSections, readLessons, subject.nodes)
           const isOpen = openId === node.id

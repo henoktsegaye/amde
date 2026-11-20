@@ -163,7 +163,7 @@ function MobileQuiz({ quiz, sectionTitle, nodeId, sectionId, subjectId, subjectA
   if (done) return <MobileResult score={score} total={total} nodeId={nodeId} sectionId={sectionId} subjectId={subjectId} />
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 8px', flexShrink: 0 }}>
         <Link to={`/${subjectId}`} aria-label="Leave quiz"
           style={{ width: 44, height: 52, borderRadius: 999, background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -175,7 +175,7 @@ function MobileQuiz({ quiz, sectionTitle, nodeId, sectionId, subjectId, subjectA
         <span style={{ fontSize: 13, fontWeight: 600, color: '#6B6B76' }}>{current + 1}/{total}</span>
       </header>
 
-      <main style={{ flex: 1, padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 20, overflow: 'auto' }}>
+      <main style={{ flex: 1, minHeight: 0, padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 20, overflowY: 'auto' }}>
         <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: subjectAccent }}>{sectionTitle} · Section quiz</div>
         <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.25, fontWeight: 500, letterSpacing: '-0.01em' }}>{q.prompt}</h1>
         <div role="radiogroup" aria-label="Answer options" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -230,8 +230,8 @@ function MobileResult({ score, total, nodeId, sectionId, subjectId }: { score: n
   useEffect(() => { recordAttempt(sectionId, pct, score, total) }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-      <main style={{ flex: 1, padding: '40px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <main style={{ flex: 1, minHeight: 0, padding: '40px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, overflowY: 'auto' }}>
         <div style={{ position: 'relative', width: 120, height: 120 }}>
           <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
             <circle cx="60" cy="60" r="58" fill={passed ? '#E7F4EC' : '#FEF2F2'} />

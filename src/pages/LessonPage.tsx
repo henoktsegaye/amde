@@ -101,7 +101,7 @@ function MobileLesson({ lesson, nodeId, sectionId, subjectId, subjectAccent }: {
   }, [isLast, lesson.id, lesson.minutes, markLessonRead])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       {/* Header */}
       <header style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 8px', flexShrink: 0 }}>
         <Link to={`/${subjectId}`} aria-label="Close lesson"
@@ -120,7 +120,7 @@ function MobileLesson({ lesson, nodeId, sectionId, subjectId, subjectAccent }: {
         {sectionId.replace(/-/g, ' ')} · {lesson.title}
       </div>
 
-      <main style={{ flex: 1, padding: '16px 20px 0', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'auto' }}>
+      <main style={{ flex: 1, minHeight: 0, padding: '16px 20px 0', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
         <h1 style={{ margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 500, letterSpacing: '-0.02em' }}>{screen.title}</h1>
         {screen.blocks.map((block, i) => (
           <BlockRenderer key={i} block={block} />

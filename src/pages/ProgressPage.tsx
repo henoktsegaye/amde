@@ -17,7 +17,7 @@ export function ProgressPage() {
         <h1 style={{ margin: 0, fontSize: bp === 'desktop' ? 28 : 26, fontWeight: 500, letterSpacing: '-0.02em', color: '#18181B' }}>Progress</h1>
       </header>
 
-      <main style={{ flex: 1, padding: bp === 'desktop' ? '0 0 40px' : '8px 20px 16px', display: 'flex', flexDirection: 'column', gap: 16, overflow: 'auto' }}>
+      <main style={{ flex: 1, minHeight: 0, padding: bp === 'desktop' ? '0 0 40px' : '8px 20px 16px', display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
           {[
@@ -94,5 +94,5 @@ export function ProgressPage() {
       </div>
     </div>
   )
-  return <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>{content}</div>
+  return <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>{content}</div>
 }
