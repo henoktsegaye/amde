@@ -8,7 +8,7 @@ const allPaths = [
   { id: 'ai-engineering', title: 'AI Engineering', icon: '🤖', accent: '#6A5AE0', desc: 'Build with LLMs, embeddings, and retrieval systems.', meta: '4 nodes · 8 sections', pill: 'Started', to: '/ai-engineering' },
   { id: 'python', title: 'Python', icon: '🐍', accent: '#E2B93B', desc: 'Write clean, idiomatic Python from day one.', meta: '5 nodes · 12 sections', pill: 'New', to: '#' },
   { id: 'data', title: 'Data Analytics', icon: '📊', accent: '#0F766E', desc: 'Query, visualise, and interpret data with SQL, Pandas, and Plotly.', meta: '4 nodes · 10 sections', pill: 'New', to: '#' },
-  { id: 'web', title: 'Web Development', icon: '🌐', accent: '#2563EB', desc: 'HTML, CSS, JavaScript, React, and deployment.', meta: '6 nodes · 15 sections', pill: 'New', to: '#' },
+  { id: 'web', title: 'Web Development', icon: '🌐', accent: '#2563EB', desc: 'HTML, CSS, JavaScript, React, and deployment.', meta: '6 nodes · 15 sections', pill: 'New', to: '/web-dev' },
   { id: 'devops', title: 'DevOps & Cloud', icon: '☁️', accent: '#6B7280', desc: 'Docker, Kubernetes, CI/CD, and AWS basics.', meta: '5 nodes · 11 sections', pill: 'New', to: '#' },
 ]
 
