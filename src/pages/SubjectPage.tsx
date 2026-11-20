@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { aiEngineering, webDevelopment, Subject, Node } from '../data/content'
+import { aiEngineering, webDevelopment } from '../data/content'
+import type { Subject, Node } from '../data/content'
 import { useProgress } from '../context/ProgressContext'
 import { useBreakpoint } from '../hooks/useBreakpoint'
 import { ProgressRing } from '../components/ProgressRing'
@@ -192,7 +193,6 @@ function DesktopRoadmap({ completedSections, readLessons, pct, subject }: { comp
 
 function NodeDetail({ node, completedSections, readLessons, subject }: { node: Node; completedSections: string[]; readLessons: string[]; subject: Subject }) {
   const { accent } = subject
-  const stateStyle = makeStateStyle(accent)
   const state = getNodeState(node.id, completedSections, readLessons, subject.nodes)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
